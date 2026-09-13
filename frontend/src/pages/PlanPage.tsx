@@ -53,23 +53,49 @@ export function PlanPage() {
     );
   }
 
-  const activities = plan?.activities || [];
+  const [optimisticOverrides, setOptimisticOverrides] = useState<Record<string, string>>({});
+
+  const activities = (plan?.activities || []).map((act) => ({
+    ...act,
+    status: optimisticOverrides[act.id] || act.status,
+  }));
 
   const handleGeneratePlan = () => {
     generatePlanMutation.mutate("stu-001");
   };
 
   const handleComplete = (activityId: string) => {
-    completeActivityMutation.mutate({ activityId });
+    // Instant optimistic visual feedback
+    setOptimisticOverrides((prev) => ({ ...prev, [activityId]: "completed" }));
+    completeActivityMutation.mutate(
+      { activityId },
+      {
+        onError: () => {
+          setOptimisticOverrides((prev) => {
+            const copy = { ...prev };
+            delete copy[activityId];
+            return copy;
+          });
+        },
+      }
+    );
   };
 
   const handleMiss = (activityId: string, title: string) => {
+    setOptimisticOverrides((prev) => ({ ...prev, [activityId]: "missed" }));
     missActivityMutation.mutate(
       { activityId, reason: "Activity missed by user" },
       {
         onSuccess: () => {
           setReplanReason(`Missed session: ${title} (Autonomous re-balance scheduled)`);
           setReplanModalOpen(true);
+        },
+        onError: () => {
+          setOptimisticOverrides((prev) => {
+            const copy = { ...prev };
+            delete copy[activityId];
+            return copy;
+          });
         },
       }
     );

@@ -604,6 +604,7 @@ def get_learning_plan() -> dict:
 
 
 def mark_activity_completed(activity_id: str) -> dict:
+    # Check in _ACTIVITIES
     for act in _ACTIVITIES:
         if act["id"] == activity_id:
             act["completed"] = True
@@ -611,7 +612,6 @@ def mark_activity_completed(activity_id: str) -> dict:
             _STUDENT["time_spent_hours"] += round(act.get("duration_minutes", 60) / 60, 1)
             _STUDENT["overall_progress"] = min(100.0, _STUDENT["overall_progress"] + 0.5)
 
-            # Prepend to recent activities
             _RECENT_ACTIVITIES.insert(
                 0,
                 {
@@ -625,6 +625,28 @@ def mark_activity_completed(activity_id: str) -> dict:
                 },
             )
             return {"success": True, "activity": act, "message": "Activity marked as completed"}
+
+    # Also check and update in _PLAN["activities"] (for plan-act-*)
+    for p_act in _PLAN.get("activities", []):
+        if p_act["id"] == activity_id:
+            p_act["status"] = "completed"
+            _STUDENT["time_spent_hours"] += round(p_act.get("duration_minutes", 60) / 60, 1)
+            _STUDENT["overall_progress"] = min(100.0, _STUDENT["overall_progress"] + 0.5)
+
+            _RECENT_ACTIVITIES.insert(
+                0,
+                {
+                    "id": f"rec-{int(datetime.now().timestamp())}",
+                    "type": "activity",
+                    "title": f"Completed: {p_act['title']}",
+                    "description": f"Completed: {p_act['title']}",
+                    "status": "completed",
+                    "timestamp": "Just now",
+                    "details": "Learning plan activity completed",
+                },
+            )
+            return {"success": True, "activity": p_act, "message": "Learning plan activity marked as completed"}
+
     return {"success": False, "message": f"Activity {activity_id} not found"}
 
 
@@ -634,7 +656,6 @@ def mark_activity_missed(activity_id: str) -> dict:
             act["completed"] = False
             act["missed"] = True
 
-            # Prepend to recent activities
             _RECENT_ACTIVITIES.insert(
                 0,
                 {
@@ -653,6 +674,30 @@ def mark_activity_missed(activity_id: str) -> dict:
                 "message": "Activity marked as missed. Autonomous replan recommended.",
                 "replan_recommended": True,
             }
+
+    # Also check in _PLAN["activities"]
+    for p_act in _PLAN.get("activities", []):
+        if p_act["id"] == activity_id:
+            p_act["status"] = "missed"
+            _RECENT_ACTIVITIES.insert(
+                0,
+                {
+                    "id": f"rec-{int(datetime.now().timestamp())}",
+                    "type": "activity",
+                    "title": f"Missed: {p_act['title']}",
+                    "description": f"Missed: {p_act['title']}",
+                    "status": "missed",
+                    "timestamp": "Just now",
+                    "details": "Plan activity missed. Autonomous replan recommended.",
+                },
+            )
+            return {
+                "success": True,
+                "activity": p_act,
+                "message": "Activity marked as missed. Autonomous replan recommended.",
+                "replan_recommended": True,
+            }
+
     return {"success": False, "message": f"Activity {activity_id} not found"}
 
 
