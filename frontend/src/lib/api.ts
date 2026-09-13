@@ -19,7 +19,14 @@
 // Fallback to the live deployed Render backend URL if environment variable is not provided at build time
 const DEFAULT_API_URL = "https://learnmate-backend-dln9.onrender.com";
 let rawApiHost = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).trim().replace(/\/+$/, "") : DEFAULT_API_URL;
-if (rawApiHost && !rawApiHost.startsWith("http://") && !rawApiHost.startsWith("https://")) {
+if (!rawApiHost || rawApiHost === "undefined" || rawApiHost === "null") {
+  rawApiHost = DEFAULT_API_URL;
+}
+// If Render provided just the internal host name without dots (e.g. 'learnmate-backend-dln9')
+if (!rawApiHost.includes(".")) {
+  rawApiHost = `${rawApiHost}.onrender.com`;
+}
+if (!rawApiHost.startsWith("http://") && !rawApiHost.startsWith("https://")) {
   rawApiHost = `https://${rawApiHost}`;
 }
 const API_HOST = rawApiHost;
