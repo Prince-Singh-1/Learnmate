@@ -6,6 +6,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, Bot, Sparkles, User, Lightbulb, Code2 } from "lucide-react";
 import { studentProfile } from "@/data/mockData";
+import { api } from "@/lib/api";
 
 interface AiChatModalProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ export function AiChatModal({
 
   if (!isOpen) return null;
 
-  const handleSend = (queryToSend?: string) => {
+  const handleSend = async (queryToSend?: string) => {
     const q = queryToSend || input;
     if (!q.trim()) return;
 
@@ -37,19 +38,41 @@ export function AiChatModal({
     setInput("");
     setIsTyping(true);
 
-    setTimeout(() => {
-      let response = `Great question regarding "${q}". In Data Structures & Algorithms, understanding the core trade-offs (Time vs Space complexity) is crucial.`;
+    try {
+      const res = await api.aiAnswerQuestion<{
+        direct_answer: string;
+        key_points?: string[];
+        code_example_or_analogy?: string;
+      }>({
+        question: q,
+        topic: q.toLowerCase().includes("dp") || q.toLowerCase().includes("dynamic") ? "Dynamic Programming" : "Graphs",
+      });
+
+      let fullAnswer = res.direct_answer;
+      if (res.key_points && res.key_points.length > 0) {
+        fullAnswer += "\n\nKey Takeaways:\n" + res.key_points.map((p: string) => `• ${p}`).join("\n");
+      }
+      if (res.code_example_or_analogy) {
+        fullAnswer += "\n\n" + res.code_example_or_analogy;
+      }
+
+      setMessages((prev) => [...prev, { role: "bot", text: fullAnswer }]);
+    } catch {
+      // Dynamic conversational fallback
+      let response = `In Data Structures & Algorithms, "${q}" is an essential concept. Understanding the time vs space complexity trade-offs will help you optimize your solution!`;
       if (q.toLowerCase().includes("dp") || q.toLowerCase().includes("dynamic")) {
         response = "Dynamic Programming is optimal substructure + overlapping subproblems. 1) Identify state variables. 2) Formulate the recurrence relation. 3) Choose Memoization (top-down) or Tabulation (bottom-up). Shall we solve the 'Coin Change' problem together?";
       } else if (q.toLowerCase().includes("graph") || q.toLowerCase().includes("dijkstra")) {
-        response = "Dijkstra's Algorithm finds the shortest path in weighted graphs with non-negative edge weights using a Min-Heap (Priority Queue) in O((V + E) log V) time. Always remember to check if a node has already been visited before relaxing edges!";
+        response = "Dijkstra's Algorithm finds the single-source shortest path in weighted graphs with non-negative edge weights using a Min-Heap (Priority Queue) in O((V + E) log V) time. Always remember to relax adjacent edges!";
       } else if (q.toLowerCase().includes("plan") || q.toLowerCase().includes("schedule")) {
-        response = "I've checked your schedule. You have 79 days remaining until your target date (30 Nov 2025). Your current completion rate is 68%. You're in great shape!";
+        response = "I've checked your schedule. You have 79 days remaining until your target date (30 Nov 2025). Your current completion rate is 70.5%. You're in great shape!";
+      } else if (q.toLowerCase().includes("ok") || q.toLowerCase().includes("yes") || q.toLowerCase().includes("sure")) {
+        response = "Awesome! What concept would you like to explore next? You can ask about Dijkstra's algorithm, 0/1 Knapsack, or schedule optimization.";
       }
-
       setMessages((prev) => [...prev, { role: "bot", text: response }]);
+    } finally {
       setIsTyping(false);
-    }, 700);
+    }
   };
 
   return (
