@@ -1,0 +1,17 @@
+export { DashboardPage } from "./DashboardPage";
+export { GoalsPage } from "./GoalsPage";
+export { PlanPage } from "./PlanPage";
+export { ResourcesPage } from "./ResourcesPage";
+export { PracticePage } from "./PracticePage";
+export { PerformancePage } from "./PerformancePage";
+export { CalendarPage } from "./CalendarPage";
+export { AiTutorPage } from "./AiTutorPage";
+export { AchievementsPage } from "./AchievementsPage";
+export { CommunityPage } from "./CommunityPage";
+export { SettingsPage } from "./SettingsPage";
+export { SimulationPage } from "./SimulationPage";
+export { LoginPage } from "./auth/LoginPage";
+export { RegisterPage } from "./auth/RegisterPage";
+export { ForgotPasswordPage } from "./auth/ForgotPasswordPage";
+export { LandingPage } from "./LandingPage";
+export { OnboardingPage } from "./OnboardingPage";

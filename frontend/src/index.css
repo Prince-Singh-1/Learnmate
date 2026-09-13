@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+
+/* ─── LearnMate Light / Ambient Theme ──────────────────────── */
+@theme {
+  /* Core Background */
+  --color-background: #f0f4f9;
+  --color-foreground: #0f172a;
+
+  /* Card / Surface */
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+
+  /* Sidebar */
+  --color-sidebar: #0d1130;
+  --color-sidebar-foreground: #c8d0e0;
+  --color-sidebar-active: #6366f1;
+
+  /* Popover */
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0f172a;
+
+  /* Primary (Indigo / Violet) */
+  --color-primary: #6366f1;
+  --color-primary-foreground: #ffffff;
+
+  /* Secondary */
+  --color-secondary: #f8fafc;
+  --color-secondary-foreground: #1e293b;
+
+  /* Muted */
+  --color-muted: #f1f5f9;
+  --color-muted-foreground: #64748b;
+
+  /* Accent */
+  --color-accent: #eef2ff;
+  --color-accent-foreground: #4f46e5;
+
+  /* Destructive */
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+
+  /* Borders */
+  --color-border: #e2e8f0;
+  --color-input: #f1f5f9;
+  --color-ring: #6366f1;
+
+  /* Chart Colors */
+  --color-chart-1: #6366f1;
+  --color-chart-2: #8b5cf6;
+  --color-chart-3: #06b6d4;
+  --color-chart-4: #10b981;
+  --color-chart-5: #f59e0b;
+
+  /* Radius */
+  --radius: 0.75rem;
+
+  /* Font */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Global Styles ────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    background-color: #f0f4f9;
+    background-image: 
+      radial-gradient(at 15% 10%, rgba(224, 231, 255, 0.6) 0px, transparent 50%),
+      radial-gradient(at 85% 20%, rgba(238, 242, 255, 0.7) 0px, transparent 50%),
+      radial-gradient(at 50% 80%, rgba(243, 232, 255, 0.4) 0px, transparent 50%);
+    background-attachment: fixed;
+    color: #0f172a;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.5);
+  }
+}
+
+/* ─── Card & Glass Utility Classes ─────────────────────────── */
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  }
+
+  .glass-card {
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.85);
+    box-shadow:
+      0 1px 2px 0 rgba(15, 23, 42, 0.04),
+      0 4px 16px -2px rgba(15, 23, 42, 0.06),
+      0 12px 32px -4px rgba(99, 102, 241, 0.04);
+  }
+
+  .glass-hover {
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .glass-hover:hover {
+    box-shadow:
+      0 16px 36px -4px rgba(15, 23, 42, 0.1),
+      0 6px 16px -2px rgba(99, 102, 241, 0.08);
+    transform: translateY(-2px) scale(1.005);
+  }
+
+  /* 3D Depth Card with Specular Rim Highlight */
+  .card-3d {
+    position: relative;
+    border-radius: 1rem;
+    background: linear-gradient(180deg, #ffffff 0%, #fcfdfd 100%);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow:
+      0 1px 3px 0 rgba(15, 23, 42, 0.04),
+      0 6px 20px -3px rgba(15, 23, 42, 0.06),
+      0 14px 36px -4px rgba(99, 102, 241, 0.05),
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .card-3d:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 2px 5px 0 rgba(15, 23, 42, 0.05),
+      0 12px 28px -4px rgba(15, 23, 42, 0.09),
+      0 20px 48px -4px rgba(99, 102, 241, 0.1),
+      inset 0 1px 0 0 rgba(255, 255, 255, 1);
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #7c3aed 50%, #9333ea 100%);
+  }
+
+  .gradient-hero {
+    background: linear-gradient(
+      135deg,
+      #13173d 0%,
+      #201c4e 35%,
+      #1a2450 70%,
+      #111a3d 100%
+    );
+  }
+
+  .gradient-sidebar {
+    background: linear-gradient(180deg, #131640 0%, #0d1030 40%, #0a0d28 100%);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.3), 0 0 60px rgba(99, 102, 241, 0.1);
+  }
+
+  .glow-sm {
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+  }
+
+  /* Shimmer animation for skeleton loading */
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+/* Reduced motion preference respect */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
