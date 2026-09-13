@@ -427,17 +427,29 @@ class AIService:
         - Adjust My Plan
         - Why Did My Plan Change?
         """
-        topic_str = topic or "Graphs"
-        if "dijkstra" in question.lower() or "shortest" in question.lower():
+        q_lower = question.lower()
+        if any(w in q_lower for w in ["sort", "bubble", "merge", "quick", "insertion", "selection"]):
+            topic_str = "Sorting"
+        elif any(w in q_lower for w in ["tree", "bst", "binary tree", "traversal", "inorder", "preorder"]):
+            topic_str = "Trees"
+        elif any(w in q_lower for w in ["dijkstra", "shortest path", "graph", "bfs", "dfs", "adjacency"]):
             topic_str = "Graphs"
-        elif "dp" in question.lower() or "knapsack" in question.lower() or "subproblem" in question.lower():
+        elif any(w in q_lower for w in ["dp", "knapsack", "subproblem", "dynamic", "memo", "tabulation", "coin change"]):
             topic_str = "Dynamic Programming"
+        elif any(w in q_lower for w in ["array", "string", "two pointer", "sliding window"]):
+            topic_str = "Arrays"
+        elif any(w in q_lower for w in ["hash", "map", "set"]):
+            topic_str = "Hashing"
+        elif any(w in q_lower for w in ["plan", "schedule", "deadline", "date"]):
+            topic_str = "Study Plan"
+        else:
+            topic_str = topic or "Algorithms"
 
         # Assemble student telemetry context
         ctx = context or {}
         student_goal = ctx.get("student_goal", "Master Data Structures & Algorithms")
-        mastery = ctx.get("topic_mastery", 30.0 if topic_str == "Graphs" else 25.0)
-        recent_assessments = ctx.get("recent_assessment_results", "Scored 52% in Graphs traversal quiz; 35% in DP state quiz")
+        mastery = ctx.get("topic_mastery", 80.0 if topic_str in ["Sorting", "Trees"] else (30.0 if topic_str == "Graphs" else 25.0))
+        recent_assessments = ctx.get("recent_assessment_results", "Scored 80% in Sorting quiz; 52% in Graphs traversal quiz; 35% in DP state quiz")
         knowledge_gaps = ctx.get("knowledge_gaps", ["Dynamic Programming (High)", "Graphs (High)"])
         recent_activities = ctx.get("recent_activities", ["Completed: Dijkstra Shortest Path Video", "Missed: Binary Trees Video"])
 
@@ -483,113 +495,128 @@ class AIService:
             except Exception as e:
                 logger.warning(f"OpenAI error in answer_student_question ({e}), activating deterministic fallback.")
 
-        # ─── Graceful Deterministic Context-Aware Fallbacks ─────────
-        # Handcrafted high-yield responses matching the student's 30% level
-        if "dijkstra" in question.lower() or topic_str == "Graphs":
-            if quick_action == "give_example":
-                direct_ans = (
-                    "Here is a concrete Dijkstra walk-through for a 3-node graph:\n"
-                    "Nodes: A (start), B, C. Edges: A->B (weight 4), A->C (weight 2), C->B (weight 1).\n"
-                    "1. dist = {A: 0, B: ∞, C: ∞}, Priority Queue: [(0, A)].\n"
-                    "2. Pop A: Relax C (dist = 2, push (2, C)), Relax B (dist = 4, push (4, B)).\n"
-                    "3. Pop C (distance 2): Relax B via C (2 + 1 = 3 < 4! Update dist[B] = 3, push (3, B)).\n"
-                    "4. Shortest path to B is 3 (A -> C -> B), not direct edge 4!"
-                )
-                code_snippet = (
-                    "import heapq\n\n"
-                    "def dijkstra(graph, start):\n"
-                    "    dist = {node: float('inf') for node in graph}\n"
-                    "    dist[start] = 0\n"
-                    "    pq = [(0, start)]  # (distance, node)\n"
-                    "    while pq:\n"
-                    "        curr_dist, u = heapq.heappop(pq)\n"
-                    "        if curr_dist > dist[u]:\n"
-                    "            continue  # Skip stale distances\n"
-                    "        for v, weight in graph[u]:\n"
-                    "            if dist[u] + weight < dist[v]:\n"
-                    "                dist[v] = dist[u] + weight\n"
-                    "                heapq.heappush(pq, (dist[v], v))\n"
-                    "    return dist"
-                )
-            elif quick_action == "give_practice":
-                direct_ans = (
-                    "Here are 2 targeted practice questions calibrated for your current 30% mastery in Graphs:\n"
-                    "1. [Warm-up] Given a weighted graph, why does Dijkstra fail or loop infinitely if edge weights are negative?\n"
-                    "2. [Core Interview Challenge] 'Network Delay Time' (LeetCode 743): You have N network nodes. Find how long it takes for a signal sent from node K to reach all nodes."
-                )
-                code_snippet = "# Target complexity: O(E log V) using a binary heap priority queue"
-            elif quick_action == "give_hint":
-                direct_ans = (
-                    "Dijkstra Strategy Hint:\n"
-                    "Always store `(current_distance, node)` in Python's `heapq`. Python compares tuples by their first element, "
-                    "so the min-heap automatically extracts the closest unvisited node in O(log V) time."
-                )
-                code_snippet = "# Crucial check: if curr_dist > dist[u]: continue"
-            elif quick_action == "check_answer":
-                direct_ans = (
-                    f"Evaluation of your answer: '{student_answer or question}':\n"
-                    "Your core intuition is sound! Note that in Dijkstra's algorithm, vertices are visited in non-decreasing order of distance. "
-                    "Make sure to guard against redundant queue insertions by skipping visited nodes."
-                )
-                code_snippet = None
-            elif quick_action == "suggest_resources":
-                direct_ans = (
-                    "Recommended for your Graphs knowledge gap:\n"
-                    "1. [Interactive Visualizer] VisuAlgo Dijkstra Step-by-Step (15 mins)\n"
-                    "2. [Video] Abdul Bari — Single Source Shortest Path (35 mins)\n"
-                    "3. [Practice Set] LeetCode #743 Network Delay Time & #787 Cheapest Flights Within K Stops."
-                )
-                code_snippet = None
-            elif quick_action == "adjust_plan":
-                direct_ans = (
-                    "Your study schedule currently allocates 90 minutes to Graphs tomorrow at 10:30 AM. "
-                    "Based on your 30% mastery, the autonomous agent recommends adding a 30-minute interactive coding session on Saturday."
-                )
-                code_snippet = None
-            elif quick_action == "why_plan_changed":
-                direct_ans = (
-                    "Your plan changed because the autonomous agent detected a 30% mastery in Graphs alongside a 25% gap in Dynamic Programming. "
-                    "The agent moved low-priority sorting drills to protect uninterrupted weekend blocks for graph traversals and Dijkstra practice."
-                )
-                code_snippet = None
-            else:  # explain_concept or general question
-                direct_ans = (
-                    "Dijkstra's Algorithm is a greedy shortest-path algorithm for weighted graphs with non-negative edge weights. "
-                    "It calculates the shortest path from a single source vertex to all other vertices.\n\n"
-                    "How it works (Level-adapted for 30% mastery):\n"
-                    "1. Initialize distances to all vertices as infinity (∞), and distance to the start node as 0.\n"
-                    "2. Use a Min-Heap (Priority Queue) to always pick the unvisited node with the smallest tentative distance.\n"
-                    "3. For the chosen node, examine all its neighbors and 'relax' the edge: if the distance through this node is smaller than what we previously recorded, update it.\n"
-                    "4. Repeat until the priority queue is empty."
-                )
-                code_snippet = (
-                    "# Dijkstra's Algorithm in Python\n"
-                    "import heapq\n\n"
-                    "def dijkstra(graph, start):\n"
-                    "    dist = {node: float('inf') for node in graph}\n"
-                    "    dist[start] = 0\n"
-                    "    pq = [(0, start)]\n"
-                    "    while pq:\n"
-                    "        curr_dist, u = heapq.heappop(pq)\n"
-                    "        if curr_dist > dist[u]:\n"
-                    "            continue\n"
-                    "        for v, weight in graph[u]:\n"
-                    "            if dist[u] + weight < dist[v]:\n"
-                    "                dist[v] = dist[u] + weight\n"
-                    "                heapq.heappush(pq, (dist[v], v))\n"
-                    "    return dist"
-                )
-
+        # ─── Rich Topic-Specific Fallbacks ─────────────────────────
+        # 1. Sorting (Bubble Sort, Merge Sort, etc.)
+        if topic_str == "Sorting":
+            code_bubble = (
+                "def bubble_sort(arr):\n"
+                "    n = len(arr)\n"
+                "    for i in range(n):\n"
+                "        swapped = False\n"
+                "        for j in range(0, n - i - 1):\n"
+                "            if arr[j] > arr[j + 1]:\n"
+                "                arr[j], arr[j + 1] = arr[j + 1], arr[j]\n"
+                "                swapped = True\n"
+                "        if not swapped: break  # Optimized O(N) best case\n"
+                "    return arr\n\n"
+                "print(bubble_sort([64, 34, 25, 12, 22, 11, 90]))\n"
+                "# Output: [11, 12, 22, 25, 34, 64, 90]"
+            )
             return AnswerQuestionResponse(
                 question=question,
-                direct_answer=direct_ans,
+                direct_answer=(
+                    "Bubble Sort repeatedly steps through the list, compares adjacent elements, and swaps them if out of order. "
+                    "In each pass, the largest remaining element 'bubbles up' to its correct position at the end.\n\n"
+                    "Complexity Analysis:\n"
+                    "• Best Case: O(N) (using the swapped flag when already sorted)\n"
+                    "• Average/Worst Case: O(N²)\n"
+                    "• Space: O(1) in-place auxiliary memory"
+                ),
                 key_points=[
-                    "Dijkstra only works on graphs with NON-NEGATIVE edge weights (for negative weights, use Bellman-Ford).",
-                    "Time Complexity: O((V + E) log V) using a binary min-heap.",
-                    "Space Complexity: O(V) to store distances and heap entries.",
-                    f"Aligned with your goal: '{student_goal}' — Graphs is currently your #2 priority gap.",
+                    "Adjacent element comparison: if arr[j] > arr[j+1], swap.",
+                    "Pass i locks the i-th largest element at the right end.",
+                    "Stable sorting algorithm with O(1) extra space.",
                 ],
-                code_example_or_analogy=code_snippet,
+                code_example_or_analogy=code_bubble,
+                related_topics=["Sorting", "Insertion Sort", "Merge Sort", "Quick Sort"],
+                follow_up_questions=[
+                    "Why is Merge Sort preferred over Bubble Sort for large datasets?",
+                    "How does the swapped boolean flag allow O(N) best-case performance?",
+                ],
+                student_context={
+                    "goal": student_goal,
+                    "topic": "Sorting",
+                    "mastery": 80.0,
+                    "gaps": knowledge_gaps,
+                },
+                quick_action_type=quick_action or "explain_concept",
+                source="deterministic_fallback",
+            )
+
+        # 2. Trees / Binary Search Trees
+        if topic_str == "Trees":
+            code_bst = (
+                "class TreeNode:\n"
+                "    def __init__(self, val=0, left=None, right=None):\n"
+                "        self.val = val\n"
+                "        self.left = left\n"
+                "        self.right = right\n\n"
+                "def inorder(root):\n"
+                "    # Inorder of a BST always prints values in sorted order!\n"
+                "    return inorder(root.left) + [root.val] + inorder(root.right) if root else []"
+            )
+            return AnswerQuestionResponse(
+                question=question,
+                direct_answer=(
+                    "In a Binary Search Tree (BST), every node follows the ordering invariant: "
+                    "all values in the left subtree are strictly less than root, and all values in the right subtree are strictly greater.\n\n"
+                    "Key Operations:\n"
+                    "• Search / Insert: Average O(log N), Worst O(N) if skewed.\n"
+                    "• Inorder Traversal yields a sorted sequence."
+                ),
+                key_points=[
+                    "BST Property: left < root < right.",
+                    "Inorder traversal always yields sorted output.",
+                    "Self-balancing BSTs (AVL, Red-Black) prevent O(N) degeneration.",
+                ],
+                code_example_or_analogy=code_bst,
+                related_topics=["Trees", "Binary Search Tree", "AVL Trees", "Tree Traversals"],
+                follow_up_questions=[
+                    "How do you check if a binary tree is a valid BST?",
+                    "What is the difference between BFS level order and DFS inorder?",
+                ],
+                student_context={
+                    "goal": student_goal,
+                    "topic": "Trees",
+                    "mastery": 80.0,
+                    "gaps": knowledge_gaps,
+                },
+                quick_action_type=quick_action or "explain_concept",
+                source="deterministic_fallback",
+            )
+
+        # 3. Graphs / Dijkstra
+        if topic_str == "Graphs":
+            code_dijkstra = (
+                "import heapq\n\n"
+                "def dijkstra(graph, start):\n"
+                "    dist = {node: float('inf') for node in graph}\n"
+                "    dist[start] = 0\n"
+                "    pq = [(0, start)]  # (distance, node)\n"
+                "    while pq:\n"
+                "        curr_dist, u = heapq.heappop(pq)\n"
+                "        if curr_dist > dist[u]: continue\n"
+                "        for v, weight in graph[u]:\n"
+                "            if dist[u] + weight < dist[v]:\n"
+                "                dist[v] = dist[u] + weight\n"
+                "                heapq.heappush(pq, (dist[v], v))\n"
+                "    return dist"
+            )
+            return AnswerQuestionResponse(
+                question=question,
+                direct_answer=(
+                    "Dijkstra's Algorithm calculates the shortest path from a single source node to all other vertices "
+                    "in a weighted graph with non-negative edge weights using a greedy min-heap approach.\n\n"
+                    "Complexity:\n"
+                    "• Time: O((V + E) log V) with a binary min-heap.\n"
+                    "• Space: O(V) for distances and heap elements."
+                ),
+                key_points=[
+                    "Greedy approach: always expands the closest unvisited vertex.",
+                    "Only valid for non-negative edge weights (use Bellman-Ford for negative weights).",
+                    f"Aligned with your goal: '{student_goal}' — Graphs is currently your #2 gap.",
+                ],
+                code_example_or_analogy=code_dijkstra,
                 related_topics=["Graphs", "Shortest Path", "Priority Queue", "Bellman-Ford", "Breadth-First Search"],
                 follow_up_questions=[
                     "What happens if an edge has a negative weight in Dijkstra?",
@@ -597,39 +624,48 @@ class AIService:
                 ],
                 student_context={
                     "goal": student_goal,
-                    "topic": topic_str,
-                    "mastery": mastery,
+                    "topic": "Graphs",
+                    "mastery": 30.0,
                     "gaps": knowledge_gaps,
                 },
                 quick_action_type=quick_action or "explain_concept",
                 source="deterministic_fallback",
             )
 
-        # Dynamic Programming / General Algorithmic Fallback
+        # 4. Dynamic Programming (Default)
+        code_dp = (
+            "# Top-Down Memoization Template\n"
+            "memo = {}\n"
+            "def solve(i, remaining):\n"
+            "    if remaining == 0: return 0\n"
+            "    if i < 0 or remaining < 0: return float('inf')\n"
+            "    state = (i, remaining)\n"
+            "    if state in memo: return memo[state]\n"
+            "    take = 1 + solve(i, remaining - coins[i])\n"
+            "    skip = solve(i - 1, remaining)\n"
+            "    memo[state] = min(take, skip)\n"
+            "    return memo[state]"
+        )
         return AnswerQuestionResponse(
             question=question,
             direct_answer=(
                 f"For {topic_str} (current mastery: {mastery}%):\n"
-                "The core secret is decomposing complex problems into smaller, overlapping subproblems. "
-                "Always write down the state variables (e.g. index $i$ and remaining capacity $w$) on paper before coding."
+                "Dynamic Programming solves optimization problems by breaking them down into overlapping subproblems. "
+                "The 3-step formula:\n"
+                "1. State Representation: Define what your parameters represent (e.g. dp[i][w]).\n"
+                "2. Recurrence Relation: Express the current answer in terms of smaller subproblem answers.\n"
+                "3. Base Cases & Direction: Choose Top-Down Memoization or Bottom-Up Tabulation."
             ),
             key_points=[
                 "Overlapping subproblems allow memoization to avoid redundant recalculation.",
                 "Optimal substructure guarantees that the global optimum is built from local sub-optima.",
                 f"Directly targets your current knowledge gap: {knowledge_gaps[0] if knowledge_gaps else 'Dynamic Programming'}.",
             ],
-            code_example_or_analogy=(
-                "# Memoization template\n"
-                "memo = {}\n"
-                "def dp(i, rem):\n"
-                "    if (i, rem) in memo: return memo[(i, rem)]\n"
-                "    # base cases & transition\n"
-                "    memo[(i, rem)] = res\n"
-                "    return res"
-            ),
+            code_example_or_analogy=code_dp,
             related_topics=["Dynamic Programming", "Recursion", "Memoization", "Tabulation"],
             follow_up_questions=[
                 "Can you identify what changes between recursive steps in your state?",
+                "Would you like to walk through 0/1 Knapsack or Coin Change next?",
             ],
             student_context={
                 "goal": student_goal,

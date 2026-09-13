@@ -32,6 +32,7 @@ export function PlanPage() {
   const [replanReason, setReplanReason] = useState<string>(
     "User Requested Strategic Schedule Optimization"
   );
+  const [optimisticOverrides, setOptimisticOverrides] = useState<Record<string, string>>({});
 
   const { data: plan, isLoading, isError, error, refetch } = useLearningPlan();
   const generatePlanMutation = useGeneratePlan();
@@ -52,8 +53,6 @@ export function PlanPage() {
       />
     );
   }
-
-  const [optimisticOverrides, setOptimisticOverrides] = useState<Record<string, string>>({});
 
   const activities = (plan?.activities || []).map((act) => ({
     ...act,
