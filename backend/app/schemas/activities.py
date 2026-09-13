@@ -8,15 +8,17 @@ from pydantic import BaseModel
 
 class ActivityItem(BaseModel):
     id: str
-    time: str
-    end_time: str
     title: str
     type: str  # "video" | "practice" | "reading" | "quiz"
     topic: str
     duration_minutes: int
-    completed: bool
-    missed: bool
-    scheduled_date: str
+    time: Optional[str] = "09:00"
+    end_time: Optional[str] = "10:00"
+    completed: Optional[bool] = False
+    missed: Optional[bool] = False
+    scheduled_date: Optional[str] = None
+    scheduled_start: Optional[str] = None
+    status: Optional[str] = "pending"
 
 
 class ActivitiesResponse(BaseModel):
