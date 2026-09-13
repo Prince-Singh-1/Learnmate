@@ -16,7 +16,11 @@
  * - /api/verification
  */
 
-const API_HOST = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/+$/, "") : "";
+let rawApiHost = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).trim().replace(/\/+$/, "") : "";
+if (rawApiHost && !rawApiHost.startsWith("http://") && !rawApiHost.startsWith("https://")) {
+  rawApiHost = `https://${rawApiHost}`;
+}
+const API_HOST = rawApiHost;
 const BASE_URL = `${API_HOST}/api`;
 
 let authToken: string | null = typeof window !== "undefined" ? (localStorage.getItem("learnmate_token") || sessionStorage.getItem("learnmate_token")) : null;
